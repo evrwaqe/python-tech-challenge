@@ -1,28 +1,24 @@
 from client.mcp_client import send_filters
+from client.nlp_interpreter import extract_filters
 from prompt_toolkit import prompt
 from rich import print
 
 
-def ask_user() -> dict:
-    print("[bold cyan]Welcome to Car Finder![/bold cyan]")
+def run_agent():
+    print("[bold cyan]Welcome to Car Finder! Describe the car you're looking for.[/bold cyan]")
+
     filters = {}
+    while not filters:
+        user_input = prompt("You: ")
+        filters = extract_filters(user_input)
 
-    brand = prompt("Do you have a brand in mind? (press Enter to skip): ")
-    if brand:
-        filters["brand"] = brand
+        if not filters:
+            print(
+                "[yellow]Sorry, I couldn't understand. Could you describe differently?[/yellow]")
 
-    fuel = prompt("Preferred fuel type? (e.g. Gasoline, Diesel, Electric): ")
-    if fuel:
-        filters["fuel"] = fuel
+    print("[green]Searching based on your description...[/green]")
+    results = send_filters(filters)
 
-    year = prompt("From which year onwards? (e.g. 2015): ")
-    if year.isdigit():
-        filters["year"] = int(year)
-
-    return filters
-
-
-def show_results(results: list):
     if not results:
         print("[red]No vehicles found with the given filters.[/red]")
     else:
@@ -30,12 +26,6 @@ def show_results(results: list):
         for v in results:
             print(
                 f"- [bold]{v['brand']} {v['model']}[/bold], {v['year']} - {v['color']} - {v['mileage']} km - R${v['price']:.2f}")
-
-
-def run_agent():
-    filters = ask_user()
-    results = send_filters(filters)
-    show_results(results)
 
 
 if __name__ == "__main__":
